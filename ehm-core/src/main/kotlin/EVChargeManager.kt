@@ -92,7 +92,10 @@ class EVChargeManager(
                 } catch (e:Exception) {
                     Response(INTERNAL_SERVER_ERROR).body(e.toString())
                 }
-            }
+            },
+            "/accounts/{account}/consumptions" bind Method.GET
+                    to consumptionManagerHandler // proxy to consumption manager micro service
+
     )
 
     fun server(port:Int = 9000) = app.asServer(Netty(port))

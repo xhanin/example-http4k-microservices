@@ -2,8 +2,10 @@ package ehm.consumptions
 
 import org.http4k.core.*
 import org.http4k.core.Status.Companion.ACCEPTED
+import org.http4k.core.Status.Companion.OK
 import org.http4k.format.Jackson.auto
 import org.http4k.routing.bind
+import org.http4k.routing.path
 import org.http4k.routing.routes
 import org.http4k.server.Netty
 import org.http4k.server.asServer
@@ -35,6 +37,8 @@ object ConsumptionManager {
         consumptions.add(consumption)
     }
 
+    fun findConsumptionsByAccount(account:String) = consumptions.asSequence().filter { it.accountRef == account }
+
     val app: HttpHandler = routes(
             "/consumptions" bind Method.POST to { req: Request ->
                 val consumption = Body.auto<ChargeConsumption>().toLens().extract(req)
@@ -42,7 +46,16 @@ object ConsumptionManager {
                 recordChargeConsumption(consumption)
 
                 Response(ACCEPTED)
+            },
+            "/accounts/{account}/consumptions" bind Method.GET to { req: Request ->
+                val account = req.path("account")?:""
+
+                val consumptions = findConsumptionsByAccount(account)
+
+                Response(OK)
+                        .with(Body.auto<List<ChargeConsumption>>().toLens() of consumptions.toList())
             }
+
     )
 
     fun server(port:Int = 9003) = app.asServer(Netty(port))
