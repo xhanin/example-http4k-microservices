@@ -2,6 +2,7 @@ package ehm.core
 
 import ehm.accountmanager.AccountManager
 import ehm.chargepricer.ChargePricer
+import ehm.consumptions.ConsumptionManager
 import org.http4k.client.JavaHttpClient
 import org.http4k.core.*
 import org.http4k.filter.ClientFilters
@@ -16,8 +17,9 @@ class EVChargeManagerTest {
         // tests EVChargeManager app handler, wired directly to its dependencies app handlers
         // (no network involved)
         shouldHandleChargeWithHandler(EVChargeManager(
-                accountManagerHandler = AccountManager.app,
-                chargePricerHandler   = ChargePricer.app
+                accountManagerHandler      = AccountManager.app,
+                chargePricerHandler        = ChargePricer.app,
+                consumptionManagerHandler  = ConsumptionManager.app
         ).app)
     }
 
@@ -26,11 +28,14 @@ class EVChargeManagerTest {
         // tests EVChargeManager app handler, calling the dependencies through http
         val accountManagerPort = 10021
         val chargePricerPort = 10022
+        val consumptionManagerPort = 10023
         listOf(AccountManager.server(accountManagerPort),
-                ChargePricer.server(chargePricerPort)).use {
+                ChargePricer.server(chargePricerPort),
+                ConsumptionManager.server(consumptionManagerPort)).use {
             shouldHandleChargeWithHandler(EVChargeManager(
-                    accountManagerHandler = localhostClient(accountManagerPort),
-                    chargePricerHandler   = localhostClient(chargePricerPort)
+                    accountManagerHandler      = localhostClient(accountManagerPort),
+                    chargePricerHandler        = localhostClient(chargePricerPort),
+                    consumptionManagerHandler  = localhostClient(consumptionManagerPort)
             ).app)
         }
     }
@@ -38,16 +43,19 @@ class EVChargeManagerTest {
     @Test
     fun `should handle charge - IT`() {
         // full integration test for EVChargeManager
-        val coreManagerPort    = 10030
-        val accountManagerPort = 10031
-        val chargePricerPort   = 10032
+        val coreManagerPort         = 10030
+        val accountManagerPort      = 10031
+        val chargePricerPort        = 10032
+        val consumptionManagerPort  = 10033
 
         listOf(
                 AccountManager.server(accountManagerPort),
                 ChargePricer.server(chargePricerPort),
+                ConsumptionManager.server(consumptionManagerPort),
                 EVChargeManager(
-                        accountManagerHandler = localhostClient(accountManagerPort),
-                        chargePricerHandler   = localhostClient(chargePricerPort)
+                        accountManagerHandler       = localhostClient(accountManagerPort),
+                        chargePricerHandler         = localhostClient(chargePricerPort),
+                        consumptionManagerHandler   = localhostClient(consumptionManagerPort)
                 ).server(coreManagerPort)
         ).use {
             shouldHandleChargeWithHandler(localhostClient(coreManagerPort))

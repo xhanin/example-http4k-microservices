@@ -3,5 +3,6 @@ rootProject.name = 'example-http4k-microservices'
 include(
         "ehm-account-manager",
         "ehm-charge-pricer",
+        "ehm-consumptions-manager",
         "ehm-core"
 )

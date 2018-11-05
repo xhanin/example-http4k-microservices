@@ -4,6 +4,7 @@ import ehm.accountmanager.Account
 import ehm.chargepricer.Charge
 import ehm.chargepricer.Price
 import ehm.chargepricer.PriceRequest
+import ehm.consumptions.ChargeConsumption
 import org.http4k.client.JavaHttpClient
 import org.http4k.core.*
 import org.http4k.core.Status.Companion.ACCEPTED
@@ -18,6 +19,7 @@ import org.http4k.routing.routes
 import org.http4k.server.Netty
 import org.http4k.server.asServer
 import java.time.ZonedDateTime
+import java.util.*
 
 /*
 {"station":"FR*SOD*12345", "media":"1234ABCD", "datetime":"2018-11-09T16:03:25+0100","duration":1234,"energy":5432}
@@ -32,7 +34,8 @@ typealias EnergyInWh = Long
 
 class EVChargeManager(
     private val accountManagerHandler:HttpHandler,
-    private val chargePricerHandler:HttpHandler
+    private val chargePricerHandler:HttpHandler,
+    private val consumptionManagerHandler: HttpHandler
 ) {
 
     fun findAccountByMedia(media:String):Account? =
@@ -52,6 +55,11 @@ class EVChargeManager(
                         ?:throw IllegalStateException("pricer didn't give any price")
             }
 
+    fun recordChargeConsumption(consumption: ChargeConsumption) =
+            consumptionManagerHandler(Request(Method.POST, "/consumptions").with(
+                    Body.auto<ChargeConsumption>().toLens() of consumption
+            ))
+
 
     fun handleCharge(charge:EVCharge) {
         val account = findAccountByMedia(charge.media)
@@ -60,8 +68,15 @@ class EVChargeManager(
         val price = price(Charge(
                 account.tariffRef, charge.datetime, charge.duration, charge.energy), account.currency)
 
-        println("TODO - handle charge with price $price")
+        val consumption = ChargeConsumption(
+                UUID.randomUUID().toString(), account.id,
+                ehm.consumptions.Charge(charge.station, charge.media, charge.datetime, charge.duration, charge.energy),
+                ehm.consumptions.Price(price.amount, price.currency)
+        )
 
+        recordChargeConsumption(consumption)
+
+        println("recorded consumption $consumption")
     }
 
     val app: HttpHandler = routes(
@@ -86,7 +101,8 @@ class EVChargeManager(
         fun default() = JavaHttpClient().let {
             EVChargeManager(
                     ClientFilters.SetBaseUriFrom(Uri.of("http://localhost:9001")).then(it),
-                    ClientFilters.SetBaseUriFrom(Uri.of("http://localhost:9002")).then(it)
+                    ClientFilters.SetBaseUriFrom(Uri.of("http://localhost:9002")).then(it),
+                    ClientFilters.SetBaseUriFrom(Uri.of("http://localhost:9003")).then(it)
             )
         }
     }
