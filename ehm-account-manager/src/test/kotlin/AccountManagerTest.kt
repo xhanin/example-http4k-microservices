@@ -14,7 +14,7 @@ class AccountManagerTest {
 
         expectThat(resp) {
             get{status}.isEqualTo(Status.OK)
-            get{bodyString()}.isEqualTo("""{"id":"123","fullName":"John Doe","currency":"EUR"}""")
+            get{bodyString()}.isEqualTo("""{"id":"123","fullName":"John Doe","currency":"EUR","tariffRef":"F1"}""")
         }
     }
     @Test
