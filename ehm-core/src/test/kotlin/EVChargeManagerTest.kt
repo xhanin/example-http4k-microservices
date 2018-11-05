@@ -15,7 +15,7 @@ class EVChargeManagerTest {
         // tests EVChargeManager app handler, wired directly to its dependencies app handlers
         // (no network involved)
         shouldHandleChargeWithHandler(EVChargeManager(
-                accountManagerClient = AccountManager.app
+                accountManagerHandler = AccountManager.app
         ).app)
     }
 
@@ -25,7 +25,7 @@ class EVChargeManagerTest {
         val accountManagerPort = 10021
         listOf(AccountManager.server(accountManagerPort)).use {
             shouldHandleChargeWithHandler(EVChargeManager(
-                    accountManagerClient = localhostClient(accountManagerPort)
+                    accountManagerHandler = localhostClient(accountManagerPort)
             ).app)
         }
     }
@@ -38,7 +38,7 @@ class EVChargeManagerTest {
         listOf(
                 AccountManager.server(accountManagerPort),
                 EVChargeManager(
-                        accountManagerClient = localhostClient(accountManagerPort)
+                        accountManagerHandler = localhostClient(accountManagerPort)
                 ).server(coreManagerPort)
         ).use {
             shouldHandleChargeWithHandler(localhostClient(coreManagerPort))

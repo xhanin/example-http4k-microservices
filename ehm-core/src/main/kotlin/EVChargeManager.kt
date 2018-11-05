@@ -28,11 +28,11 @@ typealias DurationInS = Long
 typealias EnergyInWh = Long
 
 class EVChargeManager(
-    private val accountManagerClient:HttpHandler
+    private val accountManagerHandler:HttpHandler
 ) {
 
     fun findAccountByMedia(media:String):Account? =
-            accountManagerClient(Request(Method.GET, "/media/$media/account")).let {
+            accountManagerHandler(Request(Method.GET, "/media/$media/account")).let {
                 when (it.status) {
                     OK -> Body.auto<Account>().toLens().extract(it)
                     NOT_FOUND -> null
