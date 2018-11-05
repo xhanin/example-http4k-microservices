@@ -1,3 +1,5 @@
+package ehm.accountmanager
+
 import org.http4k.core.Method
 import org.http4k.core.Request
 import org.http4k.core.Status

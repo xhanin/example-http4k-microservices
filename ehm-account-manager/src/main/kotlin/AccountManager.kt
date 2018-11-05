@@ -1,3 +1,5 @@
+package ehm.accountmanager
+
 import org.http4k.core.*
 import org.http4k.core.Status.Companion.NOT_FOUND
 import org.http4k.core.Status.Companion.OK
@@ -28,10 +30,10 @@ object AccountManager {
             }
     )
 
-    val server = app.asServer(Netty(9001))
+    fun server(port:Int = 9001) = app.asServer(Netty(port))
 }
 
 fun main(args: Array<String>) {
-    AccountManager.server.start()
+    AccountManager.server().start()
     println("account-manager started on http://localhost:9001/")
 }
