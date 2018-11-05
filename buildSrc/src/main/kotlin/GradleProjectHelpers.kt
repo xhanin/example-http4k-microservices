@@ -1,12 +1,12 @@
 import org.gradle.api.Project
 import org.gradle.api.tasks.testing.Test
-
-import org.gradle.kotlin.dsl.*
+import org.gradle.kotlin.dsl.dependencies
+import org.gradle.kotlin.dsl.kotlin
 
 object Versions {
     val junit = "5.3.1"
     val strikt = "0.16.2"
-    val http4k = "3.94.0"
+    val http4k = "3.100.0"
     val mockk = "1.8.9"
 }
 
@@ -18,6 +18,7 @@ fun http4k(module:String) = "org.http4k:http4k-${module}:${Versions.http4k}"
 fun Project.baseProject() {
     dependencies {
         "compile"(kotlin("stdlib-jdk8"))
+        "compile"(kotlin("reflect"))
 
         "testImplementation"("org.junit.jupiter:junit-jupiter-api:${Versions.junit}")
         "testImplementation"("io.strikt:strikt-core:${Versions.strikt}")
