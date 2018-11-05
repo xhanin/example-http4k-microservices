@@ -3,18 +3,18 @@ package ehm.accountmanager
 import org.http4k.core.*
 import org.http4k.core.Status.Companion.NOT_FOUND
 import org.http4k.core.Status.Companion.OK
+import org.http4k.format.Jackson.auto
 import org.http4k.routing.bind
 import org.http4k.routing.path
 import org.http4k.routing.routes
 import org.http4k.server.Netty
 import org.http4k.server.asServer
-import org.http4k.format.Jackson.auto
 
-data class Account(val id:String, val fullName:String, val currency:String)
+data class Account(val id:String, val fullName:String, val currency:String, val tariffRef:String)
 
 object AccountManager {
     fun findByMedia(media:String):Account? = when (media) {
-        "1234ABCD" -> Account("123", "John Doe", "EUR")
+        "1234ABCD" -> Account("123", "John Doe", "EUR", "F1")
         else -> null
     }
 

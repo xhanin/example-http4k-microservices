@@ -1,6 +1,7 @@
 package ehm.core
 
 import ehm.accountmanager.AccountManager
+import ehm.chargepricer.ChargePricer
 import org.http4k.client.JavaHttpClient
 import org.http4k.core.*
 import org.http4k.filter.ClientFilters
@@ -15,7 +16,8 @@ class EVChargeManagerTest {
         // tests EVChargeManager app handler, wired directly to its dependencies app handlers
         // (no network involved)
         shouldHandleChargeWithHandler(EVChargeManager(
-                accountManagerHandler = AccountManager.app
+                accountManagerHandler = AccountManager.app,
+                chargePricerHandler   = ChargePricer.app
         ).app)
     }
 
@@ -23,9 +25,12 @@ class EVChargeManagerTest {
     fun `should handle charge - with real dependencies`() {
         // tests EVChargeManager app handler, calling the dependencies through http
         val accountManagerPort = 10021
-        listOf(AccountManager.server(accountManagerPort)).use {
+        val chargePricerPort = 10022
+        listOf(AccountManager.server(accountManagerPort),
+                ChargePricer.server(chargePricerPort)).use {
             shouldHandleChargeWithHandler(EVChargeManager(
-                    accountManagerHandler = localhostClient(accountManagerPort)
+                    accountManagerHandler = localhostClient(accountManagerPort),
+                    chargePricerHandler   = localhostClient(chargePricerPort)
             ).app)
         }
     }
@@ -35,10 +40,14 @@ class EVChargeManagerTest {
         // full integration test for EVChargeManager
         val coreManagerPort    = 10030
         val accountManagerPort = 10031
+        val chargePricerPort   = 10032
+
         listOf(
                 AccountManager.server(accountManagerPort),
+                ChargePricer.server(chargePricerPort),
                 EVChargeManager(
-                        accountManagerHandler = localhostClient(accountManagerPort)
+                        accountManagerHandler = localhostClient(accountManagerPort),
+                        chargePricerHandler   = localhostClient(chargePricerPort)
                 ).server(coreManagerPort)
         ).use {
             shouldHandleChargeWithHandler(localhostClient(coreManagerPort))

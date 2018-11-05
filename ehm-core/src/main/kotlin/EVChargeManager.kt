@@ -1,20 +1,23 @@
 package ehm.core
 
+import ehm.accountmanager.Account
+import ehm.chargepricer.Charge
+import ehm.chargepricer.Price
+import ehm.chargepricer.PriceRequest
 import org.http4k.client.JavaHttpClient
 import org.http4k.core.*
 import org.http4k.core.Status.Companion.ACCEPTED
 import org.http4k.core.Status.Companion.BAD_REQUEST
 import org.http4k.core.Status.Companion.INTERNAL_SERVER_ERROR
+import org.http4k.core.Status.Companion.NOT_FOUND
+import org.http4k.core.Status.Companion.OK
 import org.http4k.filter.ClientFilters
+import org.http4k.format.Jackson.auto
 import org.http4k.routing.bind
 import org.http4k.routing.routes
 import org.http4k.server.Netty
 import org.http4k.server.asServer
-import org.http4k.format.Jackson.auto
 import java.time.ZonedDateTime
-import ehm.accountmanager.Account
-import org.http4k.core.Status.Companion.NOT_FOUND
-import org.http4k.core.Status.Companion.OK
 
 /*
 {"station":"FR*SOD*12345", "media":"1234ABCD", "datetime":"2018-11-09T16:03:25+0100","duration":1234,"energy":5432}
@@ -28,7 +31,8 @@ typealias DurationInS = Long
 typealias EnergyInWh = Long
 
 class EVChargeManager(
-    private val accountManagerHandler:HttpHandler
+    private val accountManagerHandler:HttpHandler,
+    private val chargePricerHandler:HttpHandler
 ) {
 
     fun findAccountByMedia(media:String):Account? =
@@ -41,11 +45,22 @@ class EVChargeManager(
                 }
             }
 
+    fun price(charge: Charge, currency: String): Price =
+            chargePricerHandler(Request(Method.POST, "/price-requests").with(
+                    Body.auto<PriceRequest>().toLens() of PriceRequest(charge, currency))).let {
+                Body.auto<PriceRequest>().toLens().extract(it).price
+                        ?:throw IllegalStateException("pricer didn't give any price")
+            }
+
+
     fun handleCharge(charge:EVCharge) {
         val account = findAccountByMedia(charge.media)
                 ?:throw IllegalArgumentException("media not found ${charge.media}")
 
-        println("TODO - handle charge with account $account")
+        val price = price(Charge(
+                account.tariffRef, charge.datetime, charge.duration, charge.energy), account.currency)
+
+        println("TODO - handle charge with price $price")
 
     }
 
@@ -70,7 +85,8 @@ class EVChargeManager(
     companion object {
         fun default() = JavaHttpClient().let {
             EVChargeManager(
-                    ClientFilters.SetBaseUriFrom(Uri.of("http://localhost:9001")).then(it)
+                    ClientFilters.SetBaseUriFrom(Uri.of("http://localhost:9001")).then(it),
+                    ClientFilters.SetBaseUriFrom(Uri.of("http://localhost:9002")).then(it)
             )
         }
     }
