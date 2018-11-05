@@ -1,0 +1,12 @@
+POST http://localhost:9000/charges
+Content-Type: application/json
+
+{
+  "station":"FR*SOD*12345",
+  "media":"1234ABCD",
+  "datetime":"2018-11-09T16:03:25+01:00[Europe/Paris]",
+  "duration":1234,
+  "energy":5432
+}
+
+###
