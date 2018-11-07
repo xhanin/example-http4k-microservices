@@ -20,6 +20,7 @@ import org.http4k.server.Netty
 import org.http4k.server.asServer
 import java.time.ZonedDateTime
 import java.util.*
+import kotlin.system.measureTimeMillis
 
 /*
 {"station":"FR*SOD*12345", "media":"1234ABCD", "datetime":"2018-11-09T16:03:25+0100","duration":1234,"energy":5432}
@@ -112,6 +113,19 @@ class EVChargeManager(
 }
 
 fun main(args: Array<String>) {
-    EVChargeManager.default().server().start()
-    println("ev-charge-manager started on http://localhost:9000/")
+    val time = measureTimeMillis {
+        EVChargeManager.default().server().start()
+    }
+    println("""
+===========================================================================
+    .__     __    __            _____  __
+    |  |___/  |__/  |_______   /  |  ||  | __
+    |  |  \   __\   __\____ \ /   |  ||  |/ /
+    |   Y  \  |  |  | |  |_> >    ^   /    <
+    |___|  /__|  |__| |   __/\____   ||__|_ \
+         \/           |__|        |__|     \/
+
+    ev-charge-manager started in $time ms on http://localhost:9000/
+===========================================================================
+    """)
 }
